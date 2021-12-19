@@ -31,31 +31,17 @@ initializeFrame m n = fromList [ W.Wall {W.r = r, W.c = c} | r <- [0..m - 1],
 generateWalls :: RandomGen g => Int -> Int -> Int -> Int -> g -> Set W.Wall
 generateWalls tr tc br bc seed
   -- | trace ("generateHWalls for the space: " ++ show (tx, ty, bx, by)) False = undefined
-  | width < 2 || height < 2 = empty
-  | width < height = generateHWalls tr tc br bc seed
-  | otherwise = generateVWalls tr tc br bc seed
+  | bc - tc < 4 || br - tr < 4 = empty
+  | otherwise = verticalWalls `union` horizontalWalls `union` topLeft `union` topRight `union` bottomLeft `union` bottomRight
   where
-    width = (bc - tc) `div` 2
-    height = (br - tr) `div` 2
-
--- Generate horizontal walls to divide the space
-generateHWalls :: RandomGen g => Int -> Int -> Int -> Int -> g -> Set W.Wall
-generateHWalls tr tc br bc seed
-  | trace ("generateHWalls for the space: " ++ show (tr, tc, br, bc)) False = undefined
-  | br - tr < 4 || bc - tc < 4 = empty
-  | otherwise = fromList [W.Wall {W.r = randomRow, W.c = c} | c <- [tc + 1, bc - 1] ] `union` top `union` bottom
-  where 
-    (randomRow, newSeed) = randomR (tr + 2, br - 2) seed
-    top = generateWalls tr tc randomRow bc newSeed
-    bottom = generateWalls tr randomRow br bc newSeed
-
--- Generate vertically walls divide the space
-generateVWalls :: RandomGen g => Int -> Int -> Int -> Int -> g -> Set W.Wall
-generateVWalls tr tc br bc seed
-  | trace ("generateVWalls for the space: " ++ show (tr, tc, br, bc)) False = undefined
-  | br - tr < 4 || bc - tc < 4 = empty
-  | otherwise = fromList [W.Wall {W.r = r, W.c = randomCol} | r <- [tc + 1, bc - 1] ] `union` left `union` right
-  where 
-    (randomCol, newSeed) = randomR (tr + 2, br - 2) seed
-    left = generateWalls tr tc br randomCol newSeed
-    right = generateWalls randomCol tc br bc newSeed
+    (randomRow, newRowSeed) = randomR (tr + 2, br - 2) seed
+    (randomCol, newColSeed) = randomR (tc + 2, bc - 2) seed
+    (verticalHole1, newHoleSeed) = randomR (tr + 1, randomRow - 1) seed
+    (verticalHole2, newHoleSeed2) = randomR (randomRow + 1, br - 1) newHoleSeed
+    (horizontalHole, _) = randomR (tc + 1, randomCol - 1) newHoleSeed2
+    verticalWalls = fromList [W.Wall {W.r = r, W.c = randomCol} | r <- [(tr + 1)..(br - 1)], r /= verticalHole1, r /= verticalHole2]
+    horizontalWalls = fromList [W.Wall {W.r = randomRow, W.c = c} | c <- [(tc + 1)..(bc - 1)], c /= horizontalHole]
+    topLeft = generateWalls tr tc randomRow randomCol newRowSeed
+    topRight = generateWalls tr randomCol randomRow bc newColSeed
+    bottomLeft = generateWalls randomRow tc br randomCol newRowSeed
+    bottomRight = generateWalls randomRow randomCol br bc newColSeed
