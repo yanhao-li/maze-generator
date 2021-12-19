@@ -1,9 +1,10 @@
 module Maze where
 import qualified Wall as W
+import Data.Set (Set)
 data Maze = Maze {
   m :: Int, -- number of matrix rows
   n :: Int, -- number of matrix cols
-  walls :: [W.Wall]
+  walls :: Set W.Wall
 }
 
 instance Show Maze where
