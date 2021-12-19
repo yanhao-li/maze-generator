@@ -25,13 +25,16 @@ source-repository head
 
 library
   exposed-modules:
+      Generator
       Maze
+      Wall
   other-modules:
       Paths_maze_generator
   hs-source-dirs:
       src
   build-depends:
       base >=4.7 && <5
+    , random
   default-language: Haskell2010
 
 executable maze-generator-exe
@@ -44,6 +47,7 @@ executable maze-generator-exe
   build-depends:
       base >=4.7 && <5
     , maze-generator
+    , random
   default-language: Haskell2010
 
 test-suite maze-generator-test
@@ -57,4 +61,5 @@ test-suite maze-generator-test
   build-depends:
       base >=4.7 && <5
     , maze-generator
+    , random
   default-language: Haskell2010
