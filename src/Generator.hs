@@ -50,11 +50,11 @@ generateWalls tr tc br bc seed
     walls = verticalWalls `union` horizontalWalls `difference` holes
     verticalWalls = fromList [W.Wall {W.r = r, W.c = randomCol} | r <- [(tr + 1)..(br - 1)]]
     horizontalWalls = fromList [W.Wall {W.r = randomRow, W.c = c} | c <- [(tc + 1)..(bc - 1)]]
-    (topLeft, newSeed1) = generateWalls tr tc randomRow randomCol newColSeed
-    (topRight, newSeed2) = generateWalls tr randomCol randomRow bc newSeed1
-    (bottomLeft, newSeed3) = generateWalls randomRow tc br randomCol newSeed2
-    (bottomRight, newSeed4) = generateWalls randomRow randomCol br bc newSeed3
-    (holes, newSeed5) = getHoles tr tc br bc randomRow randomCol newSeed4
+    (topLeft, newSeed1) = generateWalls tr tc randomRow randomCol seed
+    (topRight, newSeed2) = generateWalls tr randomCol randomRow bc seed
+    (bottomLeft, newSeed3) = generateWalls randomRow tc br randomCol seed
+    (bottomRight, newSeed4) = generateWalls randomRow randomCol br bc seed
+    (holes, newSeed5) = getHoles tr tc br bc randomRow randomCol seed
 
 getHoles :: RandomGen g => Int -> Int -> Int -> Int -> Int -> Int -> g -> (Set W.Wall, g)
 getHoles tr tc br bc rr rc seed = 

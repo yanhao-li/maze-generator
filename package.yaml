@@ -23,7 +23,9 @@ dependencies:
 - base >= 4.7 && < 5
 - random
 - containers
+- parallel
 - array
+- deepseq
 
 library:
   source-dirs: src
@@ -34,9 +36,10 @@ executables:
     source-dirs:         app
     ghc-options:
     - -Wall
+    - -O2
     - -threaded
     - -rtsopts
-    - -with-rtsopts=-N
+    - -eventlog
     dependencies:
     - maze-generator
 
