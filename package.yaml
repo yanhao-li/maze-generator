@@ -24,6 +24,7 @@ dependencies:
 - random
 - containers
 - array
+- parallel
 
 library:
   source-dirs: src
@@ -35,6 +36,7 @@ executables:
     ghc-options:
     - -Wall
     - -threaded
+    - -eventlog
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
@@ -48,5 +50,6 @@ tests:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
+    - eventlog
     dependencies:
     - maze-generator

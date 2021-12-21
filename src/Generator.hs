@@ -8,6 +8,7 @@ import Control.Monad
 import Data.Array.IO
 import Data.Set (Set, fromList, union, empty, difference)
 import System.Random
+import Control.Parallel.Strategies
 
 mazeGenerator :: RandomGen g => Int -> Int -> g -> M.Maze
 mazeGenerator width height seed =
@@ -50,10 +51,10 @@ generateWalls tr tc br bc seed
     walls = verticalWalls `union` horizontalWalls `difference` holes
     verticalWalls = fromList [W.Wall {W.r = r, W.c = randomCol} | r <- [(tr + 1)..(br - 1)]]
     horizontalWalls = fromList [W.Wall {W.r = randomRow, W.c = c} | c <- [(tc + 1)..(bc - 1)]]
-    (topLeft, newSeed1) = generateWalls tr tc randomRow randomCol newColSeed
-    (topRight, newSeed2) = generateWalls tr randomCol randomRow bc newSeed1
-    (bottomLeft, newSeed3) = generateWalls randomRow tc br randomCol newSeed2
-    (bottomRight, newSeed4) = generateWalls randomRow randomCol br bc newSeed3
+    (topLeft, newSeed1) = runEval (rpar $ generateWalls tr tc randomRow randomCol seed)
+    (topRight, newSeed2) = runEval (rpar $ generateWalls tr randomCol randomRow bc seed)
+    (bottomLeft, newSeed3) = runEval (rpar $ generateWalls randomRow tc br randomCol seed)
+    (bottomRight, newSeed4) = runEval (rpar $ generateWalls randomRow randomCol br bc seed)
     (holes, newSeed5) = getHoles tr tc br bc randomRow randomCol newSeed4
 
 getHoles :: RandomGen g => Int -> Int -> Int -> Int -> Int -> Int -> g -> (Set W.Wall, g)
