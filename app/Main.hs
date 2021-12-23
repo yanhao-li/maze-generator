@@ -7,16 +7,16 @@ import Generator
 import Control.DeepSeq
 import System.Random (mkStdGen)
 
-main :: IO ()
+main :: IO Integer
 main = do
   args <- getArgs
   case args of
-    [width, height, seed] -> do
-      -- start <- getCPUTime
-      -- let r = mazeGenerator (read width) (read height) (mkStdGen (read seed))
-      -- end <- r `deepseq` getCPUTime
-      -- return (end - start)
-      print $ mazeGenerator (read width) (read height) (mkStdGen (read seed))
+    [deep, width, height, seed] -> do
+      start <- getCPUTime
+      let r = mazeGenerator (read deep) (read width) (read height) (mkStdGen (read seed))
+      end <- r `deepseq` getCPUTime
+      return (end - start)
+      -- print $ mazeGenerator (read deep) (read width) (read height) (mkStdGen (read seed))
     _ -> do
       progName <- getProgName 
       die $ "Usage: " ++ progName ++ " <width> <height>"

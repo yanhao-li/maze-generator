@@ -8,13 +8,14 @@ import Control.Monad
 import Data.Array.IO
 import Data.Set (Set, fromList, union, empty, difference)
 import System.Random
+import Control.Parallel.Strategies
 
-mazeGenerator :: RandomGen g => Int -> Int -> g -> M.Maze
-mazeGenerator width height seed =
+mazeGenerator :: RandomGen g => Int -> Int -> Int -> g -> M.Maze
+mazeGenerator deep width height seed =
   M.Maze {
     M.m = m,
     M.n = n,
-    M.walls = initializeFrame m n `union` generateWalls 0 0 (m - 1) (n - 1) seed
+    M.walls = initializeFrame m n `union` generateWallsPara deep 0 0 (m - 1) (n - 1) seed
   }
   where
     m = width * 2 + 1 -- number of matrix rows
@@ -33,7 +34,7 @@ initializeFrame m n = fromList frame
 -- Given an frame, generate walls inside the frame
 -- top left wall cell: (tr, tc)
 -- bottom right wall cell: (br, bc)
-generateWalls :: RandomGen g => Int -> Int -> Int -> Int -> g -> Set W.Wall
+generateWalls :: RandomGen g => Int -> Int -> Int -> Int -> g -> Set W.Wall 
 generateWalls tr tc br bc g
   | bc - tc < 4 || br - tr < 4 = empty
   | otherwise = walls
@@ -55,6 +56,28 @@ generateWalls tr tc br bc g
     topRight = generateWalls tr randomCol randomRow bc g4
     bottomLeft = generateWalls randomRow tc br randomCol g5
     bottomRight = generateWalls randomRow randomCol br bc g6
+    (holes, _) = getHoles tr tc br bc randomRow randomCol g7
+
+generateWallsPara 0 tr tc br bc g = generateWalls tr tc br bc g
+generateWallsPara deep tr tc br bc g
+  | bc - tc < 4 || br - tr < 4 = empty
+  | otherwise = walls
+    `union` runEval (rpar (topLeft `union` topRight))
+    `union` runEval (rpar (bottomLeft `union` bottomRight))
+  where
+    (g1, g2) = split g
+    (g3, g4) = split g1
+    (g5, g6) = split g2
+    (g7, g8) = split g3
+    (randomRow, _) = pickRandom [(tr + 2), (tr + 4)..(br - 2)] g1
+    (randomCol, _) = pickRandom [(tc + 2), (tc + 4)..(bc - 2)] g2
+    walls = verticalWalls `union` horizontalWalls `difference` holes
+    verticalWalls = fromList [W.Wall {W.r = r, W.c = randomCol} | r <- [(tr + 1)..(br - 1)]]
+    horizontalWalls = fromList [W.Wall {W.r = randomRow, W.c = c} | c <- [(tc + 1)..(bc - 1)]]
+    topLeft = generateWallsPara (deep - 1) tr tc randomRow randomCol g3
+    topRight = generateWallsPara (deep - 1) tr randomCol randomRow bc g4
+    bottomLeft = generateWallsPara (deep - 1) randomRow tc br randomCol g5
+    bottomRight = generateWallsPara (deep - 1) randomRow randomCol br bc g6
     (holes, _) = getHoles tr tc br bc randomRow randomCol g7
 
 getHoles :: RandomGen g => Int -> Int -> Int -> Int -> Int -> Int -> g -> (Set W.Wall, g)
